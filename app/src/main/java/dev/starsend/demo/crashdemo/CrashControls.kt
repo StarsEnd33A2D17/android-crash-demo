@@ -1,5 +1,8 @@
 package dev.starsend.demo.crashdemo
 
+import android.os.Handler
+import android.os.Looper
+import android.view.Choreographer
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -58,11 +61,38 @@ fun CrashControls(modifier: Modifier = Modifier) {
 
         Button(
             onClick = {
-                Thread.sleep(2000)
+                val end = System.currentTimeMillis() + 2000
+                while (System.currentTimeMillis() < end) {
+                }
             },
             modifier = Modifier.fillMaxWidth()
         ) {
-            Text("Trigger Jank (Sleep 2s)")
+            Text("Trigger Single Jank (2s)")
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Button(
+            onClick = {
+                val choreographer = Choreographer.getInstance()
+                val totalFrames = 150 // 5 seconds @ 30fps
+                var framesCount = 0
+                val callback = object : Choreographer.FrameCallback {
+                    override fun doFrame(frameTimeNanos: Long) {
+                        val start = System.currentTimeMillis()
+                        while (System.currentTimeMillis() - start < 33) { }
+                        
+                        framesCount++
+                        if (framesCount < totalFrames) {
+                            choreographer.postFrameCallback(this)
+                        }
+                    }
+                }
+                choreographer.postFrameCallback(callback)
+            },
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text("Simulate 30FPS Rendering (5s)")
         }
     }
 }
